@@ -57,7 +57,7 @@ export default function NewGamePage() {
                     const req = await fetch('/api/new', {
                       method: 'POST',
                       headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ link: link }),
+                      body: JSON.stringify({ link: link, name: name }),
                     });
                     const res = await req.json();
                     if (res.err) {
@@ -65,7 +65,7 @@ export default function NewGamePage() {
                       setError(res.msg);
                     } else {
                       window.localStorage.setItem('jwt', res.jwt);
-                      router.push('/game');
+                      router.push('/setup');
                     }
                   }}
                 >
