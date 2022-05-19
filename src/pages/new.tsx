@@ -9,8 +9,8 @@ import Layout from '@/components/layout/Layout';
 import UnderlineLink from '@/components/links/UnderlineLink';
 import Seo from '@/components/Seo';
 
-export default function HomePage() {
-  const [code, setCode] = React.useState('');
+export default function NewGamePage() {
+  const [link, setLink] = React.useState('');
   const [name, setName] = React.useState('');
   const [error, setError] = React.useState('');
   const [submitted, setSubmitted] = React.useState(false);
@@ -23,17 +23,23 @@ export default function HomePage() {
       <main>
         <section className='bg-white'>
           <div className='layout flex min-h-screen flex-col items-center justify-center text-center'>
-            <h1 className='font-black text-primary-600'>review_irl</h1>
-
+            <h1 className='text-primary-600'>review_irl</h1>
             <Form>
               <div className='flex flex-col items-center'>
                 <Error show={error !== ''} error={error} className='mb-4' />
+                <p className='text-sm'>
+                  Please enter a link to a Kahoot set below. The set must be
+                  public.{' '}
+                  <UnderlineLink href='https://create.kahoot.it/discover'>
+                    Browse Kahoot sets
+                  </UnderlineLink>
+                </p>
                 <Input
-                  placeholder='Game Code'
-                  type='number'
-                  className='rounded-l-lg'
-                  value={code}
-                  onChange={(e) => setCode(e.target.value)}
+                  placeholder='Kahoot Link'
+                  type='text'
+                  className='mt-2 rounded-l-lg'
+                  value={link}
+                  onChange={(e) => setLink(e.target.value)}
                 />
                 <Input
                   placeholder='Your Name'
@@ -48,10 +54,10 @@ export default function HomePage() {
                   disabled={submitted}
                   onClick={async () => {
                     setSubmitted(true);
-                    const req = await fetch('/api/join', {
+                    const req = await fetch('/api/new', {
                       method: 'POST',
                       headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ game: code, name: name }),
+                      body: JSON.stringify({ link: link }),
                     });
                     const res = await req.json();
                     if (res.err) {
@@ -63,10 +69,10 @@ export default function HomePage() {
                     }
                   }}
                 >
-                  Join
+                  Next
                 </Button>
-                <UnderlineLink href='/new' className='mt-4 text-sm font-normal'>
-                  or Make a Game
+                <UnderlineLink href='/' className='mt-4 text-sm font-normal'>
+                  or Join a Game
                 </UnderlineLink>
               </div>
             </Form>
