@@ -24,7 +24,7 @@ export default function NewGamePage() {
   const [gameActive, setGameActive] = React.useState(false);
 
   const websocket = React.useMemo(
-    () => (isSSR ? undefined : new WebSocket('ws://localhost:2000')),
+    () => (isSSR ? undefined : new WebSocket('ws://autouoc.xyz/ws')),
     [isSSR]
   );
 
