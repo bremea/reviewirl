@@ -5,7 +5,7 @@ type ModalProps = {
   onClose?: () => void;
 } & React.ComponentPropsWithRef<'div'>;
 
-const Input = React.forwardRef<HTMLInputElement, ModalProps>(
+const Modal = React.forwardRef<HTMLInputElement, ModalProps>(
   ({ className, onClose, children, ...rest }) => {
     return (
       <div
@@ -16,10 +16,14 @@ const Input = React.forwardRef<HTMLInputElement, ModalProps>(
           className={`relative rounded-lg border border-primary-600 bg-white p-8 shadow-lg ${className}`}
           {...rest}
         >
-          <IoMdCloseCircle
-            className='absolute right-1 top-1 cursor-pointer text-2xl'
-            onClick={onClose}
-          />
+          {onClose ? (
+            <IoMdCloseCircle
+              className='absolute right-1 top-1 cursor-pointer text-2xl'
+              onClick={onClose}
+            />
+          ) : (
+            <></>
+          )}
           {children}
         </div>
       </div>
@@ -27,4 +31,4 @@ const Input = React.forwardRef<HTMLInputElement, ModalProps>(
   }
 );
 
-export default Input;
+export default Modal;

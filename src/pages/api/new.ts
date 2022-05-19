@@ -28,6 +28,8 @@ export default async function join(req: NextApiRequest, res: NextApiResponse) {
   );
   await redis.set(gameCode.toString(), new Date().toUTCString());
   await redis.sadd(`players:${gameCode}`, req.body.name);
+  await redis.set(`admin:${gameCode}`, req.body.name);
+  await redis.set(`status:${gameCode}`, 'waiting');
 
   const jwt = await new jose.SignJWT({ game: gameCode })
     .setIssuedAt()

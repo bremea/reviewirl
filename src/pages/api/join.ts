@@ -22,6 +22,7 @@ export default async function join(req: NextApiRequest, res: NextApiResponse) {
     return res.status(403).json({ err: true, msg: 'Name already taken' });
 
   await redis.sadd(`players:${req.body.game}`, req.body.name);
+  redis.publish(`channel:${req.body.game}`, `player:${req.body.name}`);
 
   const jwt = await new jose.SignJWT({ game: req.body.game })
     .setIssuedAt()
