@@ -2,8 +2,9 @@ import * as jose from 'jose';
 import { NextApiRequest, NextApiResponse } from 'next';
 
 import redis from '@/lib/redis';
+import { Markers, TeamValues } from '@/lib/types';
 
-export default async function join(req: NextApiRequest, res: NextApiResponse) {
+export default async function game(req: NextApiRequest, res: NextApiResponse) {
   if (!req.headers.authorization)
     return res
       .status(403)
@@ -21,19 +22,27 @@ export default async function join(req: NextApiRequest, res: NextApiResponse) {
     name = payload.sub as string;
   } catch (err) {
     return res.status(403).send({
-      error: true,
-      message: 'Invalid auth token.',
+      err: true,
+      msg: 'Invalid auth token.',
     });
   }
 
-  const markers: [[number, number]?] = [];
+  const markers: Markers = [];
   const mStrings = await redis.lrange(`markers:${gameCode}`, 0, -1);
-  for (const m of mStrings) {
-    markers.push(JSON.parse(`[${m}]`));
+  const mTeams = (await redis.lrange(
+    `markerTeams:${gameCode}`,
+    0,
+    -1
+  )) as Array<TeamValues>;
+  for (let o = 0; o < mStrings.length; o++) {
+    markers.push({ location: JSON.parse(`[${mStrings[o]}]`), team: mTeams[o] });
   }
   const players = await redis.smembers(`players:${gameCode}`);
   const admin = await redis.get(`admin:${gameCode}`);
   const status = await redis.get(`status:${gameCode}`);
+  const team = (await redis.sismember(`blue:${gameCode}`, name))
+    ? 'blue'
+    : 'red';
 
   res.status(200).json({
     err: false,
@@ -43,6 +52,7 @@ export default async function join(req: NextApiRequest, res: NextApiResponse) {
       markers: markers,
       players: players,
       admin: admin,
+      team: team,
       status: status,
     },
   });

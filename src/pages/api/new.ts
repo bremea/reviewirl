@@ -1,9 +1,15 @@
 import * as jose from 'jose';
 import { NextApiRequest, NextApiResponse } from 'next';
+import petitio from 'petitio';
 
+import mongo from '@/lib/mongo';
 import redis from '@/lib/redis';
+import { quType } from '@/lib/types';
 
-export default async function join(req: NextApiRequest, res: NextApiResponse) {
+export default async function newGame(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
   if (req.method !== 'POST')
     return res.status(403).json({ err: true, msg: 'POST reqs only' });
   if (!req.body.link)
@@ -22,14 +28,37 @@ export default async function join(req: NextApiRequest, res: NextApiResponse) {
     gameCodeAlreadyExists = await redis.get(gameCode.toString());
   } while (gameCodeAlreadyExists);
 
-  await redis.set(
-    `kId:${gameCode}`,
-    req.body.link.replace('https://create.kahoot.it/details/', '')
-  );
+  const kId = req.body.link.replace('https://create.kahoot.it/details/', '');
+
+  await redis.set(`kId:${gameCode}`, kId);
   await redis.set(gameCode.toString(), new Date().toUTCString());
   await redis.sadd(`players:${gameCode}`, req.body.name);
   await redis.set(`admin:${gameCode}`, req.body.name);
   await redis.set(`status:${gameCode}`, 'waiting');
+
+  const db = await mongo();
+  const setExists = await db.collection('sets').findOne({ kId: kId });
+  if (!setExists) {
+    const request = petitio(
+      `https://create.kahoot.it/rest/kahoots/${kId}/card/?includeKahoot=true`
+    );
+    const result = await (await request.send()).json();
+
+    const questions = result.kahoot.questions;
+    const qsToSend: Array<quType> = [];
+    for (const question of questions) {
+      const obj: quType = { question: '', answers: [] };
+      obj.question = question.question;
+      const choices = question.choices;
+      for (const choice of choices) {
+        obj.answers.push({ label: choice.answer, correct: choice.correct });
+      }
+      if (question.image !== '') obj.image = question.image;
+      qsToSend.push(obj);
+    }
+
+    db.collection('sets').insertOne({ kId: kId, questions: qsToSend });
+  }
 
   const jwt = await new jose.SignJWT({ game: gameCode })
     .setIssuedAt()
