@@ -4,6 +4,10 @@ module.exports = {
     dirs: ['src'],
   },
 
+  images: {
+    domains: ['media.kahoot.it', 'images-cdn.kahoot.it'],
+  },
+
   reactStrictMode: true,
 
   // Uncoment to add domain whitelist

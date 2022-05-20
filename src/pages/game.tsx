@@ -179,6 +179,16 @@ export default function NewGamePage() {
                   <p className='text-2xl font-bold'>
                     {decodeHtmlCharCodes(question.question)}
                   </p>
+                  {question.image ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={question.image}
+                      height={256}
+                      alt='Question Image'
+                    />
+                  ) : (
+                    <></>
+                  )}
                   {question.answers.map((answer, i) => {
                     return (
                       <Button
@@ -247,7 +257,7 @@ export default function NewGamePage() {
                           (marker.location[0] -
                             lat +
                             (marker.location[1] - lng));
-                        if (v < 100 && v > -100) {
+                        if (v < 2 && v > -2) {
                           const req = await fetch('/api/question', {
                             headers: {
                               Authorization: window.localStorage.getItem(
