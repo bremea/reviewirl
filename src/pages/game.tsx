@@ -41,7 +41,7 @@ export default function NewGamePage() {
         ? undefined
         : new WebSocket(
             process.env.NEXT_PUBLIC_MODE === 'prod'
-              ? 'wss://autouoc.xyz/ws'
+              ? 'wss://reviewirl.com/ws'
               : 'ws://localhost:2000'
           ),
     [isSSR]
