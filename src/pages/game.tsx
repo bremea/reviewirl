@@ -15,6 +15,8 @@ export default function NewGamePage() {
   const [lng, setLng] = React.useState(0);
   const [zoom, setZoom] = React.useState(1);
   const [name, setName] = React.useState('');
+  const [time, setTime] = React.useState<undefined | Date>(undefined);
+  const [timeRemaining, setTimeRemaining] = React.useState('5m 0s');
   const [team, setTeam] = React.useState('');
   const [error, setError] = React.useState('');
   const [players, setPlayers] = React.useState<string[]>([]);
@@ -30,6 +32,7 @@ export default function NewGamePage() {
   const [question, setQuestion] = React.useState<quType | undefined>(undefined);
   const [markerId, setMarkerId] = React.useState(-1);
   const [questionId, setQuestionId] = React.useState(-1);
+  const [winner, setWinner] = React.useState('');
 
   const websocket = React.useMemo(
     () =>
@@ -50,6 +53,26 @@ export default function NewGamePage() {
     txt.remove();
     return v;
   };
+
+  setInterval(() => {
+    if (time) {
+      const eq = new Date(time.getTime() - new Date().getTime());
+      if (new Date() <= time) {
+        setTimeRemaining(
+          `${
+            eq.getMinutes() > 0 ? eq.getMinutes() + 'm ' : ''
+          }${eq.getSeconds()}s`
+        );
+      } else if (gameActive && isAdmin) {
+        fetch('/api/end', {
+          method: 'POST',
+          headers: {
+            Authorization: window.localStorage.getItem('jwt') as string,
+          },
+        });
+      }
+    }
+  }, 1000);
 
   if (websocket)
     websocket.onmessage = (m: MessageEvent<string>) => {
@@ -91,6 +114,10 @@ export default function NewGamePage() {
             setMarkers(mcopy);
             break;
           }
+          case 'winner': {
+            setWinner(msg.upd);
+            break;
+          }
         }
       } else if (!msg.err) {
         setWSConn(true);
@@ -114,6 +141,7 @@ export default function NewGamePage() {
         setCode(res.game.code);
         setMarkers(res.game.markers);
         setPlayers(res.game.players);
+        setTime(new Date(res.game.endsAt));
         setTeam(res.game.team);
         setGameActive(res.game.status === 'started');
         setError('');
@@ -287,15 +315,24 @@ export default function NewGamePage() {
                 </Overlay>
               </Map>
               {gameActive ? (
-                <div
-                  className={`fixed left-0 top-0 z-30 m-12 flex w-auto rounded-lg p-4 py-3 text-white ${
-                    team === 'red'
-                      ? 'border-red-500 bg-red-500 hover:bg-red-500'
-                      : 'border-blue-500 bg-blue-500 hover:bg-blue-500'
-                  }`}
-                >
-                  Team {team.charAt(0).toUpperCase() + team.slice(1)}
-                </div>
+                <>
+                  <div
+                    className={`fixed left-0 top-0 z-30 m-12 flex w-auto rounded-lg p-4 py-3 text-white ${
+                      team === 'red'
+                        ? 'border-red-500 bg-red-500 hover:bg-red-500'
+                        : 'border-blue-500 bg-blue-500 hover:bg-blue-500'
+                    }`}
+                  >
+                    Team {team.charAt(0).toUpperCase() + team.slice(1)}
+                  </div>
+                  <div className='fixed right-0 bottom-0 z-30 m-12 flex w-auto rounded-lg bg-primary-600 p-4 py-3 text-white'>
+                    {new Date() < (time as Date) ? (
+                      <p>{timeRemaining} remaining</p>
+                    ) : (
+                      <p>Time&apos;s up!</p>
+                    )}
+                  </div>
+                </>
               ) : (
                 <Modal className='max-w-lg text-center'>
                   <Error show={error !== ''} error={error} className='mb-4' />
@@ -357,6 +394,13 @@ export default function NewGamePage() {
             <div className='flex h-screen w-screen flex-col items-center justify-center text-white'>
               <p>We can&apos;t locate you. Please allow location.</p>
             </div>
+          )}
+          {winner === '' ? (
+            <></>
+          ) : (
+            <Modal className='max-w-lg text-center'>
+              {winner === 'tie' ? 'It is a tie!' : `Team ${winner} wins!`}
+            </Modal>
           )}
         </section>
       </main>

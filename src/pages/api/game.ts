@@ -43,6 +43,7 @@ export default async function game(req: NextApiRequest, res: NextApiResponse) {
   const team = (await redis.sismember(`blue:${gameCode}`, name))
     ? 'blue'
     : 'red';
+  const time = new Date((await redis.get(gameCode.toString())) as string);
 
   res.status(200).json({
     err: false,
@@ -51,6 +52,7 @@ export default async function game(req: NextApiRequest, res: NextApiResponse) {
       name: name,
       markers: markers,
       players: players,
+      endsAt: new Date(time.getTime() + 5 * 60 * 1000).toUTCString(),
       admin: admin,
       team: team,
       status: status,

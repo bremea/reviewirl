@@ -35,31 +35,28 @@ export default async function start(req: NextApiRequest, res: NextApiResponse) {
       msg: 'Missing permissions.',
     });
 
-  const players = await redis.smembers(`players:${gameCode}`);
-  const half = Math.ceil(players.length / 2);
+  redis.publish(`channel:${gameCode}`, 'status:end');
+  await redis.set(`status:${gameCode}`, 'ended');
 
-  if (players.length < 2)
-    return res.status(403).send({
-      err: true,
-      msg: 'You need at least 2 players to start.',
-    });
+  let gamestatus = 'tie';
 
-  const blue = players.slice(0, half);
-  const red = players.slice(-half).filter((p) => !blue.includes(p));
-
-  await redis.sadd(`blue:${gameCode}`, blue);
-  await redis.sadd(`red:${gameCode}`, red);
-  await redis.set(gameCode.toString(), new Date().toUTCString());
-
-  await redis.set(`status:${gameCode}`, 'started');
-  redis.publish(`channel:${gameCode}`, `status:start`);
-  for (const p of players) {
-    if (blue.includes(p)) {
-      redis.publish(`channel:${gameCode}`, `blue:${p}`);
-    } else {
-      redis.publish(`channel:${gameCode}`, `red:${p}`);
+  const markers = await redis.lrange(`markerTeams:${gameCode}`, 0, -1);
+  let blue = 0;
+  let red = 0;
+  for (const m of markers) {
+    if (m === 'blue') {
+      blue++;
+    } else if (m === 'red') {
+      red++;
     }
   }
+
+  if (blue > red) {
+    gamestatus = 'blue';
+  } else if (red > blue) {
+    gamestatus = 'red';
+  }
+  redis.publish(`channel:${gameCode}`, `winner:${gamestatus}`);
 
   res.status(200).json({ err: false });
 }

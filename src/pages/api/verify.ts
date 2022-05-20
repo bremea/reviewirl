@@ -38,6 +38,9 @@ export default async function setup(req: NextApiRequest, res: NextApiResponse) {
       msg: 'Invalid auth token.',
     });
   }
+  const status = await redis.get(`status:${gameCode}`);
+  if (status === 'ended' || status === 'waiting')
+    return res.status(403).send({ err: true, msg: 'Game not in play.' });
 
   const kId = await redis.get(`kId:${gameCode}`);
   const db = await mongo();
