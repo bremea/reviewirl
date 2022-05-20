@@ -33,6 +33,7 @@ export default function NewGamePage() {
   const [markerId, setMarkerId] = React.useState(-1);
   const [questionId, setQuestionId] = React.useState(-1);
   const [winner, setWinner] = React.useState('');
+  const [gameEnded, setGameEnded] = React.useState(false);
 
   const websocket = React.useMemo(
     () =>
@@ -63,7 +64,7 @@ export default function NewGamePage() {
             eq.getMinutes() > 0 ? eq.getMinutes() + 'm ' : ''
           }${eq.getSeconds()}s`
         );
-      } else if (gameActive && isAdmin) {
+      } else if (gameActive && isAdmin && !gameEnded) {
         fetch('/api/end', {
           method: 'POST',
           headers: {
@@ -116,6 +117,7 @@ export default function NewGamePage() {
           }
           case 'winner': {
             setWinner(msg.upd);
+            setGameEnded(true);
             break;
           }
         }
@@ -143,6 +145,7 @@ export default function NewGamePage() {
         setPlayers(res.game.players);
         setTime(new Date(res.game.endsAt));
         setTeam(res.game.team);
+        setGameEnded(res.game.status === 'ended');
         setGameActive(res.game.status === 'started');
         setError('');
         setIsAdmin(res.game.admin === res.game.name);

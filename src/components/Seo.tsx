@@ -1,17 +1,13 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 
-// !STARTERCONF Change these default meta
 const defaultMeta = {
-  title: 'Next.js + Tailwind CSS + TypeScript Starter',
-  siteName: 'Next.js + Tailwind CSS + TypeScript Starter',
-  description:
-    'A starter for Next.js, Tailwind CSS, and TypeScript with Absolute Import, Seo, Link component, pre-configured with Husky',
-  /** Without additional '/' on the end, e.g. https://theodorusclarence.com */
-  url: 'https://tsnext-tw.thcl.dev',
+  title: 'review_irl',
+  siteName: 'review_irl',
+  description: 'A fast-paced educational review game that gets kids outside.',
+  url: 'https://reviewirl.com',
   type: 'website',
   robots: 'follow, index',
-  /** No need to be filled, will be populated with openGraph function */
   image: '',
 };
 
@@ -48,6 +44,7 @@ export default function Seo(props: SeoProps) {
       <meta property='og:title' content={meta.title} />
       <meta name='image' property='og:image' content={meta.image} />
       {/* Twitter */}
+      <meta name='theme-color' content='#65A30B' />
       <meta name='twitter:card' content='summary_large_image' />
       <meta name='twitter:site' content='@th_clarence' />
       <meta name='twitter:title' content={meta.title} />
@@ -73,12 +70,6 @@ export default function Seo(props: SeoProps) {
       {favicons.map((linkProps) => (
         <link key={linkProps.href} {...linkProps} />
       ))}
-      <meta name='msapplication-TileColor' content='#ffffff' />
-      <meta
-        name='msapplication-TileImage'
-        content='/favicon/ms-icon-144x144.png'
-      />
-      <meta name='theme-color' content='#ffffff' />
     </Head>
   );
 }
@@ -90,7 +81,6 @@ type Favicons = {
   type?: string;
 };
 
-// !STARTERCONF this is the default favicon, you can generate your own from https://www.favicon-generator.org/ then replace the whole /public/favicon folder
 const favicons: Array<Favicons> = [
   {
     rel: 'apple-touch-icon',
