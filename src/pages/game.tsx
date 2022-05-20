@@ -55,25 +55,15 @@ export default function NewGamePage() {
     return v;
   };
 
-  setInterval(() => {
-    if (time) {
-      const eq = new Date(time.getTime() - new Date().getTime());
-      if (new Date() <= time) {
-        setTimeRemaining(
-          `${
-            eq.getMinutes() > 0 ? eq.getMinutes() + 'm ' : ''
-          }${eq.getSeconds()}s`
-        );
-      } else if (gameActive && isAdmin && !gameEnded) {
-        fetch('/api/end', {
-          method: 'POST',
-          headers: {
-            Authorization: window.localStorage.getItem('jwt') as string,
-          },
-        });
-      }
-    }
-  }, 1000);
+  const timeSync = React.useCallback(async () => {
+    const req = await fetch('/api/game', {
+      headers: {
+        Authorization: window.localStorage.getItem('jwt') as string,
+      },
+    });
+    const res = await req.json();
+    setTime(new Date(res.game.endsAt));
+  }, []);
 
   if (websocket)
     websocket.onmessage = (m: MessageEvent<string>) => {
@@ -91,6 +81,7 @@ export default function NewGamePage() {
             if (msg.upd === 'start') {
               setGameActive(true);
               setError('');
+              timeSync();
             }
             break;
           }
@@ -126,9 +117,33 @@ export default function NewGamePage() {
       }
     };
 
+  const updateTime = React.useCallback(async () => {
+    if (time) {
+      const eq = new Date(time.getTime() - new Date().getTime());
+      if (new Date() <= time) {
+        setTimeRemaining(
+          `${
+            eq.getMinutes() > 0 ? eq.getMinutes() + 'm ' : ''
+          }${eq.getSeconds()}s`
+        );
+      } else if (gameActive && isAdmin && !gameEnded && !isSSR) {
+        setGameEnded(true);
+        fetch('/api/end', {
+          method: 'POST',
+          headers: {
+            Authorization: window.localStorage.getItem('jwt') as string,
+          },
+        });
+      }
+    } else {
+      await timeSync();
+    }
+  }, [gameActive, gameEnded, isAdmin, isSSR, time, timeSync]);
+
   React.useEffect(() => {
+    setInterval(updateTime, 1000);
     setIsSSR(false);
-  }, []);
+  }, [updateTime]);
 
   React.useEffect(() => {
     const loadGame = async () => {

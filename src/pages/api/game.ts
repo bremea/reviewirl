@@ -52,7 +52,7 @@ export default async function game(req: NextApiRequest, res: NextApiResponse) {
       name: name,
       markers: markers,
       players: players,
-      endsAt: new Date(time.getTime() + 5 * 60 * 1000).toUTCString(),
+      endsAt: new Date(time.getTime() + 1 * 60 * 1000).toUTCString(),
       admin: admin,
       team: team,
       status: status,
