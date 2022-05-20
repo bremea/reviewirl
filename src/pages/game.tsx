@@ -34,6 +34,7 @@ export default function NewGamePage() {
   const [questionId, setQuestionId] = React.useState(-1);
   const [winner, setWinner] = React.useState('');
   const [gameEnded, setGameEnded] = React.useState(false);
+  const [intervalInPlace, setIntervalInPlace] = React.useState(false);
 
   const websocket = React.useMemo(
     () =>
@@ -66,7 +67,7 @@ export default function NewGamePage() {
   }, []);
 
   if (websocket)
-    websocket.onmessage = (m: MessageEvent<string>) => {
+    websocket.onmessage = async (m: MessageEvent<string>) => {
       const msg: { upd?: string; typ?: string; err: boolean; msg: string } =
         JSON.parse(m.data);
       if (msg.upd && msg.typ) {
@@ -81,7 +82,7 @@ export default function NewGamePage() {
             if (msg.upd === 'start') {
               setGameActive(true);
               setError('');
-              timeSync();
+              await timeSync();
             }
             break;
           }
@@ -135,15 +136,23 @@ export default function NewGamePage() {
           },
         });
       }
-    } else {
-      await timeSync();
     }
-  }, [gameActive, gameEnded, isAdmin, isSSR, time, timeSync]);
+  }, [gameActive, gameEnded, isAdmin, isSSR, time]);
 
   React.useEffect(() => {
-    setInterval(updateTime, 1000);
     setIsSSR(false);
-  }, [updateTime]);
+  }, []);
+
+  React.useEffect(() => {
+    if (gameActive && !intervalInPlace && time) {
+      setIntervalInPlace(true);
+      const runInt = async () => {
+        await timeSync();
+        setInterval(updateTime, 1000);
+      };
+      runInt();
+    }
+  }, [time, intervalInPlace, updateTime, gameActive, timeSync]);
 
   React.useEffect(() => {
     const loadGame = async () => {
