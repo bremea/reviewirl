@@ -129,12 +129,6 @@ export default function NewGamePage() {
         );
       } else if (gameActive && isAdmin && !gameEnded && !isSSR) {
         setGameEnded(true);
-        fetch('/api/end', {
-          method: 'POST',
-          headers: {
-            Authorization: window.localStorage.getItem('jwt') as string,
-          },
-        });
       }
     }
   }, [gameActive, gameEnded, isAdmin, isSSR, time]);
