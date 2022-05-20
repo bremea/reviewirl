@@ -183,7 +183,7 @@ export default function NewGamePage() {
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={question.image}
-                      height={256}
+                      className='my-4 h-64'
                       alt='Question Image'
                     />
                   ) : (
@@ -257,7 +257,8 @@ export default function NewGamePage() {
                           (marker.location[0] -
                             lat +
                             (marker.location[1] - lng));
-                        if (v < 2 && v > -2) {
+                        if (v < 2 && v > -3) {
+                          setQuestion({ question: 'Loading...', answers: [] });
                           const req = await fetch('/api/question', {
                             headers: {
                               Authorization: window.localStorage.getItem(
